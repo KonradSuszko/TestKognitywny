@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Test Kognitywny</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --primary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+            --gray: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        h1,
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            margin: 10px;
+            cursor: pointer;
+            width: 80%;
+            max-width: 300px;
+            font-weight: bold;
+        }
+
+        .btn:active {
+            opacity: 0.8;
+        }
+
+        .btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            opacity: 1;
+        }
+
+        /* TEST 1: Refleks */
+        #circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: var(--success);
+            margin: 30px auto;
+        }
+
+        /* TEST 2: Koordynacja (Siatka 5x5) */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 30px repeat(5, 1fr);
+            gap: 5px;
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .indicator {
+            background-color: var(--gray);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            margin: auto;
+        }
+
+        .indicator.on {
+            background-color: var(--warning);
+            box-shadow: 0 0 10px var(--warning);
+        }
+
+        .grid-btn {
+            background-color: #2c3e50;
+            border: 1px solid #444;
+            aspect-ratio: 1 / 1;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .grid-btn:active {
+            background-color: #555;
+        }
+
+        .empty-cell {
+            visibility: hidden;
+        }
+
+        /* TEST 3: Matematyka */
+        #math-equation {
+            font-size: 40px;
+            font-weight: bold;
+            margin: 30px 0;
+        }
+
+        #math-input {
+            font-size: 30px;
+            padding: 10px;
+            width: 150px;
+            text-align: center;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+            background: var(--bg-color);
+            color: white;
+        }
+
+        .stats {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        /* Tabela wyników */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            text-align: center;
+        }
+
+        th {
+            background-color: #2c3e50;
+            color: #fff;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .text-success {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .text-danger {
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        .trial-text {
+            color: #aaa;
+            font-size: 14px;
+            display: block;
+            margin: 2px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="start-screen" class="screen active">
+        <h1>Test Kognitywno-motoryczny</h1>
+        <p>Test składa się z 3 zadań. Bada twój czas reakcji, koordynację wzrokowo-ruchową oraz szybkość obliczeń.</p>
+        <button class="btn" onclick="startSequence()">Rozpocznij Test</button>
+    </div>
+
+    <div id="intro-screen" class="screen">
+        <h1 id="intro-title">Tytuł Zadań</h1>
+        <p id="intro-desc">Opis zadań...</p>
+        <button class="btn" id="intro-btn">Zrozumiałem, start!</button>
+    </div>
+
+    <div id="test1" class="screen">
+        <h2>Zadanie 1: Refleks</h2>
+        <div id="circle"></div>
+        <button class="btn" id="btn-react" onclick="onReactClick()">Czekaj...</button>
+    </div>
+
+    <div id="test2" class="screen">
+        <h2>Zadanie 2: Koordynacja</h2>
+        <div class="stats">Pozostały czas: <span id="t2-time" class="text-warning">30</span>s</div>
+        <div class="stats">
+            <span class="text-success">Dobrze: <span id="t2-correct">0</span></span> |
+            <span class="text-danger">Źle: <span id="t2-wrong">0</span></span>
+        </div>
+
+        <div class="grid-container" id="grid-board">
+        </div>
+    </div>
+
+    <div id="test3" class="screen">
+        <h2>Zadanie 3: Matematyka</h2>
+        <div class="stats">Pozostały czas: <span id="t3-time" class="text-warning">60</span>s</div>
+        <div class="stats">
+            <span class="text-success">Dobrze: <span id="t3-correct">0</span></span> |
+            <span class="text-danger">Źle: <span id="t3-wrong">0</span></span>
+        </div>
+
+        <div id="math-equation">12 + 34 = ?</div>
+        <input type="number" id="math-input" inputmode="numeric" placeholder="Wynik">
+        <button class="btn" style="margin-top: 20px;" onclick="checkMath()">Zatwierdź wynik</button>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <h1>Koniec Testu!</h1>
+        <h2>Twoje wyniki:</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Zadanie</th>
+                    <th>Twój Wynik</th>
+                </tr>
+            </thead>
+            <tbody id="results-table-body">
+            </tbody>
+        </table>
+
+        <button class="btn" style="margin-top: 30px;" onclick="location.reload()">Spróbuj ponownie</button>
+    </div>
+
+    <script>
+        // Zmienne do przechowywania wyników końcowych
+        let finalResults = {
+            t1_avgTime: 0,
+            t1_times: [], // Nowa tablica na pojedyncze wyniki
+            t1_falseStarts: 0,
+            t2_correct: 0,
+            t2_wrong: 0,
+            t3_correct: 0,
+            t3_wrong: 0
+        };
+
+        // Funkcja do zmiany widocznego ekranu
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // Funkcja do wyświetlania instrukcji przed zadaniem
+        function showIntro(title, desc, onStartCallback) {
+            document.getElementById('intro-title').innerText = title;
+            document.getElementById('intro-desc').innerText = desc;
+
+            const btn = document.getElementById('intro-btn');
+            const newBtn = btn.cloneNode(true);
+            btn.parentNode.replaceChild(newBtn, btn);
+            newBtn.addEventListener('click', onStartCallback);
+
+            showScreen('intro-screen');
+        }
+
+        // Start całej sekwencji
+        function startSequence() {
+            prepareTest1();
+        }
+
+        // --- TEST 1: REFLEKS ---
+        let t1_attempts = 0;
+        let t1_startTime = 0;
+        let t1_timeout = null;
+        let t1_results = [];
+        let t1_waitingForRed = false;
+        let t1_isCoolingDown = false;
+
+        function prepareTest1() {
+            showIntro(
+                "Zadanie 1: Refleks",
+                "Na ekranie pojawi się zielone kółko. Gdy zmieni kolor na czerwony, jak najszybciej kliknij przycisk. Zadanie powtórzy się 3 razy.",
+                startTest1
+            );
+        }
+
+        function startTest1() {
+            t1_attempts = 0;
+            finalResults.t1_falseStarts = 0;
+            t1_results = [];
+            showScreen('test1');
+            nextReactionRound();
+        }
+
+        function nextReactionRound() {
+            if (t1_attempts >= 3) {
+                let avg = t1_results.reduce((a, b) => a + b, 0) / t1_results.length;
+                finalResults.t1_avgTime = Math.round(avg);
+                finalResults.t1_times = [...t1_results]; // Kopiujemy czasy do wyników końcowych
+                prepareTest2();
+                return;
+            }
+
+            const circle = document.getElementById('circle');
+            const btn = document.getElementById('btn-react');
+
+            t1_waitingForRed = true;
+            t1_isCoolingDown = false;
+            circle.style.backgroundColor = "var(--success)";
+            btn.innerText = "Czekaj...";
+
+            let delay = Math.random() * 3000 + 1000;
+
+            t1_timeout = setTimeout(() => {
+                t1_waitingForRed = false;
+                circle.style.backgroundColor = "var(--danger)";
+                btn.innerText = "KLIKNIJ!";
+                t1_startTime = performance.now();
+            }, delay);
+        }
+
+        function onReactClick() {
+            if (t1_isCoolingDown) return;
+
+            const btn = document.getElementById('btn-react');
+
+            if (t1_waitingForRed) {
+                // FALSTART
+                clearTimeout(t1_timeout);
+                finalResults.t1_falseStarts++;
+                t1_isCoolingDown = true;
+
+                btn.innerText = "Za wcześnie! (Błąd)";
+
+                setTimeout(nextReactionRound, 1000);
+            } else {
+                // POPRAWNE KLIKNIĘCIE
+                let reactionTime = performance.now() - t1_startTime;
+                t1_results.push(reactionTime);
+                t1_attempts++;
+                nextReactionRound();
+            }
+        }
+
+
+        // --- TEST 2: KOORDYNACJA ---
+        let t2_timer, t2_timeLeft, t2_targetRow, t2_targetCol;
+
+        function prepareTest2() {
+            showIntro(
+                "Zadanie 2: Koordynacja",
+                "Na ekranie pojawi się siatka 5x5. Na krawędziach zapalą się dwie lampki wskazujące wiersz i kolumnę. Twoim zadaniem jest kliknięcie przycisku na przecięciu tych dwóch linii. Masz na to 30 sekund.",
+                startTest2
+            );
+        }
+
+        function startTest2() {
+            showScreen('test2');
+            t2_timeLeft = 30;
+            finalResults.t2_correct = 0;
+            finalResults.t2_wrong = 0;
+            updateStats2();
+            buildGrid(5);
+            nextGridTarget(5);
+
+            t2_timer = setInterval(() => {
+                t2_timeLeft--;
+                updateStats2();
+                if (t2_timeLeft <= 0) {
+                    clearInterval(t2_timer);
+                    prepareTest3();
+                }
+            }, 1000);
+        }
+
+        function buildGrid(size) {
+            const board = document.getElementById('grid-board');
+            board.innerHTML = '';
+
+            board.innerHTML += `<div class="empty-cell"></div>`;
+
+            for (let c = 0; c < size; c++) {
+                board.innerHTML += `<div style="display:flex"><div class="indicator col-ind" id="ind-c-${c}"></div></div>`;
+            }
+
+            for (let r = 0; r < size; r++) {
+                board.innerHTML += `<div style="display:flex"><div class="indicator row-ind" id="ind-r-${r}"></div></div>`;
+                for (let c = 0; c < size; c++) {
+                    board.innerHTML += `<button class="grid-btn" onclick="onGridClick(${r}, ${c}, ${size})"></button>`;
+                }
+            }
+        }
+
+        function nextGridTarget(size) {
+            document.querySelectorAll('.indicator').forEach(el => el.classList.remove('on'));
+
+            let newRow, newCol;
+
+            // Pętla gwarantująca, że nowe pole nie będzie takie samo jak stare
+            do {
+                newRow = Math.floor(Math.random() * size);
+                newCol = Math.floor(Math.random() * size);
+            } while (newRow === t2_targetRow && newCol === t2_targetCol);
+
+            t2_targetRow = newRow;
+            t2_targetCol = newCol;
+
+            document.getElementById(`ind-r-${t2_targetRow}`).classList.add('on');
+            document.getElementById(`ind-c-${t2_targetCol}`).classList.add('on');
+        }
+
+        function onGridClick(r, c, size) {
+            if (r === t2_targetRow && c === t2_targetCol) {
+                finalResults.t2_correct++;
+            } else {
+                finalResults.t2_wrong++;
+            }
+
+            updateStats2();
+            nextGridTarget(size);
+        }
+
+        function updateStats2() {
+            document.getElementById('t2-time').innerText = t2_timeLeft;
+            document.getElementById('t2-correct').innerText = finalResults.t2_correct;
+            document.getElementById('t2-wrong').innerText = finalResults.t2_wrong;
+        }
+
+
+        // --- TEST 3: MATEMATYKA ---
+        let t3_timer, t3_timeLeft, t3_currentAnswer;
+
+        function prepareTest3() {
+            showIntro(
+                "Zadanie 3: Matematyka",
+                "Rozwiązuj równania, polegające na dodawaniu liczb dwucyfrowych. Wpisz wynik w pole i kliknij 'Zatwierdź wynik'. Masz na to dokładnie 60 sekund.",
+                startTest3
+            );
+        }
+
+        function startTest3() {
+            showScreen('test3');
+            t3_timeLeft = 60;
+            finalResults.t3_correct = 0;
+            finalResults.t3_wrong = 0;
+            document.getElementById('math-input').value = '';
+            updateStats3();
+            generateMath();
+
+            t3_timer = setInterval(() => {
+                t3_timeLeft--;
+                updateStats3();
+                if (t3_timeLeft <= 0) {
+                    clearInterval(t3_timer);
+                    showFinalResults();
+                }
+            }, 1000);
+        }
+
+        function generateMath() {
+            let num1 = Math.floor(Math.random() * 90) + 10;
+            let num2 = Math.floor(Math.random() * 90) + 10;
+
+            document.getElementById('math-equation').innerText = `${num1} + ${num2} = ?`;
+            t3_currentAnswer = num1 + num2;
+        }
+
+        function checkMath() {
+            const inputVal = parseInt(document.getElementById('math-input').value);
+            if (isNaN(inputVal)) return;
+
+            if (inputVal === t3_currentAnswer) {
+                finalResults.t3_correct++;
+            } else {
+                finalResults.t3_wrong++;
+            }
+
+            document.getElementById('math-input').value = '';
+            document.getElementById('math-input').focus();
+
+            updateStats3();
+            generateMath();
+        }
+
+        function updateStats3() {
+            document.getElementById('t3-time').innerText = t3_timeLeft;
+            document.getElementById('t3-correct').innerText = finalResults.t3_correct;
+            document.getElementById('t3-wrong').innerText = finalResults.t3_wrong;
+        }
+
+
+        // --- EKRAN KOŃCOWY ---
+        function showFinalResults() {
+            const tbody = document.getElementById('results-table-body');
+
+            // Generowanie podsumowania dla poszczególnych prób
+            let t1_details = finalResults.t1_times
+                .map((t, i) => `<span class="trial-text">Próba ${i + 1}: ${Math.round(t)} ms</span>`)
+                .join('');
+
+            tbody.innerHTML = `
+                <tr>
+                    <td><strong>Refleks</strong></td>
+                    <td>
+                        <strong>Średnia: ${finalResults.t1_avgTime} ms</strong>
+                        <div style="margin: 10px 0;">${t1_details}</div>
+                        <span class="text-danger">${finalResults.t1_falseStarts} falstartów</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Koordynacja</strong><br><small>(siatka 5x5 w 30s)</small></td>
+                    <td><span class="text-success">${finalResults.t2_correct} dobrych</span> / <span class="text-danger">${finalResults.t2_wrong} złych</span></td>
+                </tr>
+                <tr>
+                    <td><strong>Matematyka</strong><br><small>(dodawanie w 60s)</small></td>
+                    <td><span class="text-success">${finalResults.t3_correct} dobrych</span> / <span class="text-danger">${finalResults.t3_wrong} złych</span></td>
+                </tr>
+            `;
+            showScreen('result-screen');
+        }
+    </script>
+</body>
+
+</html>
